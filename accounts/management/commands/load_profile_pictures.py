@@ -14,7 +14,8 @@ class Command(BaseCommand):
         for picture in pictures:
             ProfilePicture.objects.get_or_create(
                 name=picture['name'],
-                image=picture['image']
+                defaults={'image': picture['image']}
             )
-
-        self.stdout.write(self.style.SUCCESS('Successfully loaded profile pictures'))
+            self.stdout.write(
+                self.style.SUCCESS(f'Processed {picture["name"]}')
+            )

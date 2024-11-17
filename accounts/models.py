@@ -15,13 +15,12 @@ class CustomUserManager(BaseUserManager):
         user = self.create_user(username)
         user.is_staff = True
         user.is_superuser = True
-        user.level = 10
         user.save(using=self._db)
         return user
 
 class ProfilePicture(models.Model):
     name = models.CharField(max_length=100)
-    image = models.CharField(max_length=200)
+    image = models.ImageField(upload_to='profile_pictures/')
 
     def __str__(self):
         return self.name
