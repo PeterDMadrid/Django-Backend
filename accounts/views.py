@@ -18,21 +18,21 @@ def get_profile_pictures(request):
 def register_user(request):
     username = request.data.get('username')
     profile_picture_id = request.data.get('profile_picture_id')
-    
+
     if not username:
         return Response(
             {'error': 'Username is required'}, 
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     if CustomUser.objects.filter(username=username).exists():
         return Response(
             {'error': 'Username already exists'}, 
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     user = CustomUser.objects.create_user(username=username)
-    
+
     if profile_picture_id:
         try:
             profile_picture = ProfilePicture.objects.get(id=profile_picture_id)
@@ -40,9 +40,12 @@ def register_user(request):
             user.save()
         except ProfilePicture.DoesNotExist:
             pass
-    
+
+
+    Token.objects.filter(user=user).delete()
+
     token, _ = Token.objects.get_or_create(user=user)
-    
+
     return Response({
         'user': UserSerializer(user).data,
         'token': token.key
@@ -52,9 +55,10 @@ def register_user(request):
 @permission_classes([AllowAny])
 def login_user(request):
     username = request.data.get('username')
-    
+
     try:
         user = CustomUser.objects.get(username=username)
+        Token.objects.filter(user=user).delete()
         token, _ = Token.objects.get_or_create(user=user)
         return Response({
             'user': UserSerializer(user).data,
@@ -87,4 +91,8 @@ def update_profile_picture(request):
             {'error': 'Profile picture not found'}, 
             status=status.HTTP_404_NOT_FOUND
         )
-    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_authentication(request):
+    return Response({'authenticated': True, 'username': request.user.username})
