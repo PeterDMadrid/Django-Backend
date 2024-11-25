@@ -4,7 +4,7 @@ from .models import CustomUser, ProfilePicture
 class ProfilePictureSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfilePicture
-        fields = ('id', 'username', 'image')
+        fields = ('id', 'name', 'image')
 
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = ProfilePictureSerializer(read_only=True)
