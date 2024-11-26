@@ -96,3 +96,12 @@ def update_profile_picture(request):
 @permission_classes([IsAuthenticated])
 def check_authentication(request):
     return Response({'authenticated': True, 'username': request.user.username})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    Token.objects.filter(user=request.user).delete()
+    return Response(
+        {'message': 'Successfully logged out'},
+        status=status.HTTP_200_OK
+    )
