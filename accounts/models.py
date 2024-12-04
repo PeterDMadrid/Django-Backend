@@ -40,6 +40,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     password = models.CharField(max_length=128, null=True)
+    is_right = models.BooleanField(default=True)
 
     objects = CustomUserManager()
 
