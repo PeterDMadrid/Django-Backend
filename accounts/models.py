@@ -31,7 +31,7 @@ class ProfilePicture(models.Model):
         return self.name
     
 class Score(models.Model):
-    recognition = models.FloatField(default=0.0)
+    recognition = models.IntegerFieldField(default=0)
     
     def __str__(self):
         return str(self.recognition)
