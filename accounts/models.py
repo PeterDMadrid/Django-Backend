@@ -10,6 +10,8 @@ class CustomUserManager(BaseUserManager):
         if profile_picture:
             user.profile_picture = profile_picture
         user.save(using=self._db)
+        
+        Score.objects.create(user=user)
         return user
     
     def create_superuser(self, username, password=None):
@@ -28,14 +30,16 @@ class ProfilePicture(models.Model):
     def __str__(self):
         return self.name
     
+class Score(models.Model):
+    recognition = models.IntegerField(default=0)
+    
+    def __str__(self):
+        return str(self.recognition)
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=30, unique=True)
-    profile_picture = models.ForeignKey(
-        ProfilePicture,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    ) 
+    profile_picture = models.ForeignKey(ProfilePicture, on_delete=models.SET_NULL, null=True, blank=True)
+    score = models.OneToOneField(Score, on_delete=models.SET_NULL, null=True, blank=True)
     level = models.IntegerField(default=1)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
