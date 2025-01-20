@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-%ung#ze=!y5ejr&+0^br=7_bv4+i9my+n$7w%_3my3zbsbyv_c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.22']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'YourIPAddress']
 
 
 # Application definition
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'accounts',
     'corsheaders',
+    'handsign_recognition',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,7 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Allow Flutter app to connect (for development only)
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+]
