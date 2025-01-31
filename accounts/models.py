@@ -11,7 +11,7 @@ class CustomUserManager(BaseUserManager):
             user.profile_picture = profile_picture
         user.save(using=self._db)
         
-        score = Score.objects.create(recognition=0, signing=0)  # Initialize signing score
+        score = Score.objects.create(recognition=0, signing=0,user_profile=user)  # Initialize signing score
         user.score = score
         user.save(using=self._db) 
         return user
@@ -33,21 +33,22 @@ class ProfilePicture(models.Model):
         return self.name
     
 class Score(models.Model):
+    user = models.OneToOneField(
+        'CustomUser', 
+        on_delete=models.CASCADE, 
+        related_name='user_score', 
+        null=True
+    )
     recognition = models.IntegerField(default=0)
-    signing = models.IntegerField(default=0)  # New field for signing score
+    signing = models.IntegerField(default=0)
     
     def __str__(self):
-        return f"Recognition: {self.recognition}, Signing: {self.signing}"
-    
-    def save_signing_score(self, signing_score):
-        if self.score:
-            self.score.signing = signing_score
-            self.score.save()
+        return f"User: {self.user.username if self.user else 'No User'}, Recognition: {self.recognition}, Signing: {self.signing}"
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=30, unique=True)
     profile_picture = models.ForeignKey(ProfilePicture, on_delete=models.SET_NULL, null=True, blank=True)
-    score = models.OneToOneField(Score, on_delete=models.SET_NULL, null=True, blank=True,related_name='user')
+    score = models.OneToOneField(Score, on_delete=models.SET_NULL, null=True, blank=True,related_name='user_profile')
     level = models.IntegerField(default=1)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

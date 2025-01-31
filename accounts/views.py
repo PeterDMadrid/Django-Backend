@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import CustomUser, ProfilePicture
+from .models import CustomUser, ProfilePicture, Score
 from .serializers import UserSerializer, ProfilePictureSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -111,24 +111,53 @@ def logout_user(request):
     )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Require authentication
+@permission_classes([IsAuthenticated])
 def save_score_view(request):
-    username = request.data.get('username')
-    signing_score = request.data.get('signing_score')
-
-    if not username or signing_score is None:
-        return Response({'error': 'Username and signing score are required'}, status=status.HTTP_400_BAD_REQUEST)
-
     try:
-        user = CustomUser .objects.get(username=username)
+        # Detailed logging
+        print("Request Data:", request.data)
+        print("User:", request.user)
+        
+        username = request.data.get('username')
+        signing_score = request.data.get('signing_score')
 
-        # Update the signing score
-        if user.score:
-            user.score.signing = signing_score
-            user.score.save()
+        try:
+            # Use request.user instead of fetching by username
+            user = request.user
+            
+            # Create score if not exists
+            score_obj, created = Score.objects.get_or_create(
+                user=user, 
+                defaults={'signing': signing_score}
+            )
+            
+            # Update score
+            score_obj.signing = signing_score
+            score_obj.save()
 
-        return Response({'status': 'success', 'message': 'Score saved successfully.'})
-    except CustomUser .DoesNotExist:
-        return Response({'error': 'User  not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                'status': 'success', 
+                'message': 'Score saved successfully',
+                'data': {
+                    'username': user.username,
+                    'score': signing_score
+                }
+            })
+
+        except Exception as user_error:
+            print(f"User processing error: {user_error}")
+            return Response({
+                'error': 'User processing failed', 
+                'details': str(user_error)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Comprehensive error logging
+        print(f"Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return Response({
+            'error': 'Internal server error', 
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
