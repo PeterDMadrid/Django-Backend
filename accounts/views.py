@@ -5,6 +5,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import CustomUser, ProfilePicture
 from .serializers import UserSerializer, ProfilePictureSerializer
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import CustomUser 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -105,3 +109,26 @@ def logout_user(request):
         {'message': 'Successfully logged out'},
         status=status.HTTP_200_OK
     )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Require authentication
+def save_score_view(request):
+    username = request.data.get('username')
+    signing_score = request.data.get('signing_score')
+
+    if not username or signing_score is None:
+        return Response({'error': 'Username and signing score are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = CustomUser .objects.get(username=username)
+
+        # Update the signing score
+        if user.score:
+            user.score.signing = signing_score
+            user.score.save()
+
+        return Response({'status': 'success', 'message': 'Score saved successfully.'})
+    except CustomUser .DoesNotExist:
+        return Response({'error': 'User  not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

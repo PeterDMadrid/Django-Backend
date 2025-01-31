@@ -11,7 +11,7 @@ class CustomUserManager(BaseUserManager):
             user.profile_picture = profile_picture
         user.save(using=self._db)
         
-        score = Score.objects.create()
+        score = Score.objects.create(recognition=0, signing=0)  # Initialize signing score
         user.score = score
         user.save(using=self._db) 
         return user
@@ -34,9 +34,15 @@ class ProfilePicture(models.Model):
     
 class Score(models.Model):
     recognition = models.IntegerField(default=0)
+    signing = models.IntegerField(default=0)  # New field for signing score
     
     def __str__(self):
-        return str(self.recognition)
+        return f"Recognition: {self.recognition}, Signing: {self.signing}"
+    
+    def save_signing_score(self, signing_score):
+        if self.score:
+            self.score.signing = signing_score
+            self.score.save()
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=30, unique=True)
