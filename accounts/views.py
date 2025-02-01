@@ -2,9 +2,13 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import CustomUser, ProfilePicture
+from .models import CustomUser, ProfilePicture, Score
 from .serializers import UserSerializer, ProfilePictureSerializer
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import CustomUser 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -105,3 +109,55 @@ def logout_user(request):
         {'message': 'Successfully logged out'},
         status=status.HTTP_200_OK
     )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_score_view(request):
+    try:
+        # Detailed logging
+        print("Request Data:", request.data)
+        print("User:", request.user)
+        
+        username = request.data.get('username')
+        signing_score = request.data.get('signing_score')
+
+        try:
+            # Use request.user instead of fetching by username
+            user = request.user
+            
+            # Create score if not exists
+            score_obj, created = Score.objects.get_or_create(
+                user=user, 
+                defaults={'signing': signing_score}
+            )
+            
+            # Update score
+            score_obj.signing = signing_score
+            score_obj.save()
+
+            return Response({
+                'status': 'success', 
+                'message': 'Score saved successfully',
+                'data': {
+                    'username': user.username,
+                    'score': signing_score
+                }
+            })
+
+        except Exception as user_error:
+            print(f"User processing error: {user_error}")
+            return Response({
+                'error': 'User processing failed', 
+                'details': str(user_error)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    except Exception as e:
+        # Comprehensive error logging
+        print(f"Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return Response({
+            'error': 'Internal server error', 
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
