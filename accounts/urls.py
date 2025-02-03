@@ -9,4 +9,5 @@ urlpatterns = [
     path('check-authentication/', views.check_authentication, name='check-authentication'),
     path('logout-user/', views.logout_user, name='logout-user'),
     path('save_score/', views.save_score_view, name='save_score'),  # Ensure this matches your Flutter app
+    path('save_recognition_score/', views.save_recognition_score_view, name='save_recognition_score'),
 ]

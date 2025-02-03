@@ -161,3 +161,39 @@ def save_score_view(request):
             'error': 'Internal server error', 
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_recognition_score_view(request):
+    try:
+        username = request.data.get('username')
+        recognition_score = request.data.get('recognition_score')
+
+        user = request.user
+        
+        # Create score if not exists
+        score_obj, created = Score.objects.get_or_create(
+            user=user, 
+            defaults={'recognition': recognition_score}
+        )
+        
+        # Update score
+        score_obj.recognition = recognition_score
+        score_obj.save()
+
+        return Response({
+            'status': 'success', 
+            'message': 'Recognition score saved successfully',
+            'data': {
+                'username': user.username,
+                'score': recognition_score
+            }
+        })
+
+    except Exception as e:
+        return Response({
+            'error': 'Internal server error', 
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
