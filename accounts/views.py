@@ -197,3 +197,15 @@ def save_recognition_score_view(request):
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_scores(request):
+    try:
+        score = request.user.user_score_profile
+        return Response({
+            'recognition': score.recognition,
+            'signing': score.signing,
+        })
+    except Score.DoesNotExist:
+        return Response({'error': 'Score not found'}, status=status.HTTP_404_NOT_FOUND)
+    
