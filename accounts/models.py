@@ -40,6 +40,7 @@ class Score(models.Model):
     )
     recognition = models.IntegerField(default=0)
     signing = models.IntegerField(default=0)
+    challenge_scores = models.JSONField(default=list, blank=True, null=True)
     
     def __str__(self):
         return f"User: {self.user.username if self.user else 'No User'}, Recognition: {self.recognition}, Signing: {self.signing}"

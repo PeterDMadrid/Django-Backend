@@ -190,10 +190,87 @@ def save_recognition_score_view(request):
 def get_user_scores(request):
     try:
         score = request.user.user_score_profile
+        challenge_scores = score.challenge_scores if score.challenge_scores else []
         return Response({
             'recognition': score.recognition,
             'signing': score.signing,
+            'challenge_scores': challenge_scores,
         })
     except Score.DoesNotExist:
         return Response({'error': 'Score not found'}, status=status.HTTP_404_NOT_FOUND)
     
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_challenge_score_view(request):
+    try:
+        score = request.data.get('score')
+        level = request.data.get('level')
+        user = request.user
+        
+        # Validate incoming data
+        if score is None:
+            return Response({
+                'error': 'score is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        if level is None:
+            return Response({
+                'error': 'level is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Convert to integers if needed
+        try:
+            score = int(score)
+            level = int(level)
+        except (ValueError, TypeError):
+            return Response({
+                'error': 'score and level must be valid integers'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get or create score object
+        score_obj, created = Score.objects.get_or_create(
+            user=user,
+            defaults={'challenge_scores': [0] * 12}  # Initialize with zeros for all levels
+        )
+        
+        # Ensure the challenge_scores field exists and is properly initialized
+        if not hasattr(score_obj, 'challenge_scores') or score_obj.challenge_scores is None:
+            score_obj.challenge_scores = [0] * 12  # Space for 12 levels
+        
+        # Make sure the array is large enough
+        while len(score_obj.challenge_scores) <= level:
+            score_obj.challenge_scores.append(0)
+        
+        # Only update if the new score is higher for the specific level
+        if score > score_obj.challenge_scores[level]:
+            score_obj.challenge_scores[level] = score
+            score_obj.save()
+            message = f'New high score saved for level {level}!'
+        else:
+            message = f'Score not saved for level {level} - existing score is higher'
+
+        return Response({
+            'status': 'success',
+            'message': message,
+            'data': {
+                'username': user.username,
+                'level': level,
+                'score': score,
+                'high_score': score_obj.challenge_scores[level],
+                'all_scores': score_obj.challenge_scores
+            }
+        })
+
+    except IndexError as e:
+        return Response({
+            'error': 'Index error',
+            'details': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        
+        return Response({
+            'error': 'Internal server error',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
