@@ -12,6 +12,7 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         
         score = Score.objects.create(recognition=0, signing=0,user=user)  # Initialize signing score
+        progress = Progress.objects.create(user=user)
         user.save(using=self._db) 
         return user
     
@@ -59,4 +60,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
+    
+class Progress(models.Model):
+    user = models.OneToOneField(
+        'CustomUser', 
+        on_delete=models.CASCADE, 
+        related_name='progress',
+        null=True
+    )
+    introduction = models.BooleanField(default=False)
+    twodigit = models.BooleanField(default=False)
+    mathlesson = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"Progress for {self.user.username if self.user else 'No User'}"
     
