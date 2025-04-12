@@ -15,6 +15,7 @@ urlpatterns = [
     path('save_challenge_score/', views.save_challenge_score_view, name='save_challenge_score'),
     path('update-intro-progress/', views.update_introduction_progress, name='update_intro_progress'),
     path('update-two-digits-progress/', views.update_two_digits_progress, name='update_two_digits_progress'),
+    path('update-math-lesson-progress/', views.update_math_lesson_progress, name='update_math_lesson_progress'),
     path('get-user-progress/', views.get_user_progress, name='get_user_progress'),
     path('users/by-username/<str:username>/', UserDetailView.as_view(), name='user-by-username'),
 ]
