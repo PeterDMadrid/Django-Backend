@@ -2,9 +2,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import CustomUser, ProfilePicture, Score
+from .models import CustomUser, ProfilePicture, Score, Progress
 from .serializers import UserSerializer, ProfilePictureSerializer
 from rest_framework.authtoken.models import Token
+from rest_framework import generics
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -274,3 +275,68 @@ def save_challenge_score_view(request):
             'error': 'Internal server error',
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_introduction_progress(request):
+    user = request.user
+    print(f"User ID: {user.id}, Username: {user.username}")
+    
+    # Get or create the Progress object for this user
+    progress, created = Progress.objects.get_or_create(user=user)
+    print(f"Progress before update: {progress.introduction}")
+    
+    # Update the introduction field
+    progress.introduction = True
+    progress.save()
+    
+    # Verify the save worked
+    updated_progress = Progress.objects.get(user=user)
+    print(f"Progress after update: {updated_progress.introduction}")
+    
+    return Response({"success": True, "message": "Introduction progress updated"})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_two_digits_progress(request):
+    user = request.user
+    print(f"User ID: {user.id}, Username: {user.username}")
+    
+    # Get or create the Progress object for this user
+    progress, created = Progress.objects.get_or_create(user=user)
+    print(f"Progress before update: {progress.twodigit}")
+    
+    # Update the introduction field
+    progress.twodigit = True
+    progress.save()
+    
+    # Verify the save worked
+    updated_progress = Progress.objects.get(user=user)
+    print(f"Progress after update: {updated_progress.twodigit}")
+    
+    return Response({"success": True, "message": "Two Digits progress updated"})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_progress(request):
+    try:
+        # Retrieve the user's progress
+        progress = request.user.progress  # Since user has a related Progress model
+        
+        # Return the relevant progress fields
+        return Response({
+            'introduction': progress.introduction,
+            'twodigit': progress.twodigit,
+            'mathlesson': progress.mathlesson,
+            'last_updated': progress._meta.get_field('user').model.objects.get(id=request.user.id).last_login,  # Example of last login
+        })
+
+    except Progress.DoesNotExist:
+        # Return an error if the user does not have progress data
+        return Response({'error': 'Progress not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class UserDetailView(generics.RetrieveAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'username'

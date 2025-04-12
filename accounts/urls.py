@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import UserDetailView
 
 urlpatterns = [
     path('register/', views.register_user, name='register'),
@@ -12,4 +13,8 @@ urlpatterns = [
     path('save_recognition_score/', views.save_recognition_score_view, name='save_recognition_score'),
     path('user-scores/', views.get_user_scores, name='user_scores'),
     path('save_challenge_score/', views.save_challenge_score_view, name='save_challenge_score'),
+    path('update-intro-progress/', views.update_introduction_progress, name='update_intro_progress'),
+    path('update-two-digits-progress/', views.update_two_digits_progress, name='update_two_digits_progress'),
+    path('get-user-progress/', views.get_user_progress, name='get_user_progress'),
+    path('users/by-username/<str:username>/', UserDetailView.as_view(), name='user-by-username'),
 ]
