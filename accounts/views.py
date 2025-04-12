@@ -316,6 +316,26 @@ def update_two_digits_progress(request):
     
     return Response({"success": True, "message": "Two Digits progress updated"})
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_math_lesson_progress(request):
+    user = request.user
+    print(f"User ID: {user.id}, Username: {user.username}")
+    
+    # Get or create the Progress object for this user
+    progress, created = Progress.objects.get_or_create(user=user)
+    print(f"Progress before update: {progress.mathlesson}")
+    
+    # Update the introduction field
+    progress.mathlesson = True
+    progress.save()
+    
+    # Verify the save worked
+    updated_progress = Progress.objects.get(user=user)
+    print(f"Progress after update: {updated_progress.mathlesson}")
+    
+    return Response({"success": True, "message": "Math Lesson progress updated"})
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user_progress(request):
