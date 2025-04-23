@@ -181,9 +181,9 @@ def predict(request):
                     if hand_sign_id is not None and 0 <= hand_sign_id < len(keypoint_classifier_labels) 
                     else 'Unknown',
             'handedness': handedness,
-            'bounding_box': brect,
-            'confidence': float(confidence),
-            'is_valid_digit': is_valid_digit,
+            'bounding_box': [int(x) for x in brect],  
+            'confidence': float(confidence),         
+            'is_valid_digit': bool(is_valid_digit), 
             'gesture_type': gesture_type
         }
         
