@@ -15,7 +15,7 @@ class KeyPointClassifier:
     def __init__(self):
         # Adjust the path to match your Django project structure
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(base_dir, 'models', 'keypoint_classifier.tflite')
+        model_path = os.path.join(base_dir, 'models', 'model.tflite')
         
         try:
             self.interpreter = tf.lite.Interpreter(model_path=model_path)
@@ -73,8 +73,10 @@ def load_labels():
             keypoint_classifier_labels = csv.reader(f)
             return [row[0] for row in keypoint_classifier_labels]
     except FileNotFoundError:
-        print("Label file not found!")
-        return ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
+        print("Label file not found! Using default labels.")
+        # Updated default labels to include all 15 classes
+        return ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 
+                'Rockon', 'Okay', 'Notone', 'Nottwo', 'El']
 
 keypoint_classifier_labels = load_labels()
 
@@ -169,14 +171,20 @@ def predict(request):
         print(f"Hand Sign ID: {hand_sign_id}")
         print(f"Confidence: {confidence}")
         
+        # Determine if the prediction is a valid digit (0-9) or one of the special gestures
+        is_valid_digit = 0 <= hand_sign_id <= 9
+        gesture_type = 'digit' if is_valid_digit else 'special'
+        
         response_data = {
             'prediction': int(hand_sign_id) if hand_sign_id is not None else -1,
             'label': keypoint_classifier_labels[hand_sign_id] 
                     if hand_sign_id is not None and 0 <= hand_sign_id < len(keypoint_classifier_labels) 
                     else 'Unknown',
             'handedness': handedness,
-            'bounding_box': brect,
-            'confidence': float(confidence)
+            'bounding_box': [int(x) for x in brect],  
+            'confidence': float(confidence),         
+            'is_valid_digit': bool(is_valid_digit), 
+            'gesture_type': gesture_type
         }
         
     except Exception as e:
